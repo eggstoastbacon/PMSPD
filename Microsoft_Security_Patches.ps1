@@ -4,13 +4,14 @@
 #Compares file size headers and re-downloads corrupt files.
 #Downloads the patch description to am individual text file.
 
-#OS to download
-$OSList = "Server+2012+R2","Server+2008+R2","Server+2016"
+#OS to download, Variables..
+$OSList = "Server 2012 R2","Server 2008 R2","Server 2016"
 $Year = get-date -format yyyy
 $Month = get-date -format MM
 $currentMonthDate = get-date -format yyyy-MM
 $patchRepo = "D:\Installers\Downloads"
 
+$OSList = $OSList.Replace(" ","+")
 $headers= @{ 
 "accept" = "application/json;odata=verbose" 
 } 
