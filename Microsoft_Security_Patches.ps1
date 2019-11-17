@@ -1,17 +1,22 @@
-﻿[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+#Downloads the currents month's security updates and servicing stack updates. 
+#Includes, IE 11, .NET, Servicing Stack, Security Only and Monthly Rollup.
+#Compares file size headers and re-downloads currupt files.
 
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+#OS to download
+$OSList = "Server+2012+R2","Server+2008+R2","Server+2016"
+$Year = get-date -format yyyy
+$Month = get-date -format MM
+$currentMonthDate = get-date -format yyyy-MM
 $patchRepo = "D:\Installers\Downloads"
 
 $headers= @{ 
 "accept" = "application/json;odata=verbose" 
 } 
-$OSList = "Server+2012+R2","Server+2008+R2","Server+2016"
-#$OSLIst = "Server+2012+R2"
-foreach($OS in $OSlist){
-$Year = get-date -format yyyy
-$Month = get-date -format MM
-$currentMonthDate = get-date -format yyyy-MM
 
+foreach($OS in $OSlist){
+
+#Microsoft catalog URL
 $URL = "https://www.catalog.update.microsoft.com/Search.aspx?q=$currentMonthDate+$OS"
 
 $Page = Invoke-WebRequest $URL
