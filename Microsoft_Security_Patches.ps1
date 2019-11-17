@@ -3,8 +3,8 @@
 $patchRepo = "D:\Installers\Downloads"
 
 $headers= @{ 
-            "accept" = "application/json;odata=verbose" 
-            } 
+"accept" = "application/json;odata=verbose" 
+} 
 $OSList = "Server+2012+R2","Server+2008+R2","Server+2016"
 #$OSLIst = "Server+2012+R2"
 foreach($OS in $OSlist){
