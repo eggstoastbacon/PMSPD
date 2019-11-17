@@ -28,6 +28,7 @@ $CurrentResults = $Pagelinks | where-object{$_.outerText -like "*$currentMonthDa
 $list = [System.Collections.Generic.List[psobject]]::new()
 $i=0
 
+#Create a list of results to parse
 foreach($currentResult in $currentResults){
 $currentResult
 $post = @{ size = 0; updateID = $currentResult.ID.replace('_link',''); uidInfo = $currentResult.ID.replace('_link','')} | ConvertTo-Json -Compress
@@ -45,7 +46,7 @@ $list.AddRange(@(
 $systemType = $OS.Replace("+","_")
 
 ForEach ( $item in $list ) {
-#Additional Filters here..
+#Additional Filters here.. Begin downloading filtered items.. Validating files..
 if($item.URL -like "*download.windowsupdate.com*" -and $item.Notes -notlike "*Itanium*" -and $item.Notes -notlike "*(1803)*" -and $item.Notes -notlike "*Preview*" -and $item.Notes -notlike "*Adobe Flash*" ){
 $itemURL = $item.URL | out-string
 if ($itemURL.trim() -like "*.exe*"){$ext = ".exe"}
