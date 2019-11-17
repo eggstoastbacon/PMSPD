@@ -1,8 +1,8 @@
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 #Downloads the currents month's security updates and servicing stack updates. 
 #Includes, IE 11, .NET, Servicing Stack, Security Only and Monthly Rollup.
 #Compares file size headers and re-downloads currupt files.
 
-[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 #OS to download
 $OSList = "Server+2012+R2","Server+2008+R2","Server+2016"
 $Year = get-date -format yyyy
@@ -44,6 +44,7 @@ $list.AddRange(@(
 $systemType = $OS.Replace("+","_")
 
 ForEach ( $item in $list ) {
+#Additional Filters here..
 if($item.URL -like "*download.windowsupdate.com*" -and $item.Notes -notlike "*Itanium*" -and $item.Notes -notlike "*(1803)*" -and $item.Notes -notlike "*Preview*" -and $item.Notes -notlike "*Adobe Flash*" ){
 $itemURL = $item.URL | out-string
 if ($itemURL.trim() -like "*.exe*"){$ext = ".exe"}
@@ -53,10 +54,12 @@ $onlinefilesizeMB = [math]::round($onlinefilesize / 1024000 )
 $descfilepath = ("$patchRepo\" + $item.Patch + "-" + $systemType + $ext + ".txt")
 $item.Notes + " " + $onlinefilesizeMB + "MB" | out-file $descfilepath -ErrorAction SilentlyContinue
 
+#Begin Download
 Invoke-WebRequest -Uri $itemURL.trim() -OutFile ("$patchRepo\" + $item.Patch + "-" + $systemType + $ext) -TimeoutSec 600 -ErrorAction SilentlyContinue
 $offlinefilesize = Get-ChildItem ("$patchRepo\" + $item.Patch + "-" + $systemType + $ext) | % {[math]::ceiling($_.length)}
 $Validate = (Get-AppLockerFileInformation -path ("$patchRepo\" + $item.Patch + "-" + $systemType + $ext)).Publisher.PublisherName
 
+#Validate file
 while ($onlinefilesize -notlike $offlinefilesize -or $validate -notlike "*Microsoft*"){
 Invoke-WebRequest -Uri $itemURL.trim() -OutFile ("$patchRepo\" + $item.Patch + "-" + $systemType + $ext) -TimeoutSec 600 -ErrorAction SilentlyContinue
 $Validate = (Get-AppLockerFileInformation -path ("$patchRepo\" + $item.Patch + "-" + $systemType + $ext)).Publisher.PublisherName
