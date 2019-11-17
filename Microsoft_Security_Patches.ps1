@@ -1,7 +1,7 @@
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 #Downloads the currents month's security updates and servicing stack updates. 
 #Includes, IE 11, .NET, Servicing Stack, Security Only and Monthly Rollup.
-#Compares file size headers and re-downloads currupt files.
+#Compares file size headers and re-downloads corrupt files.
 
 #OS to download
 $OSList = "Server+2012+R2","Server+2008+R2","Server+2016"
