@@ -4,6 +4,8 @@
 #Compares file size headers and re-downloads corrupt files.
 #Downloads the patch description to an individual text file.
 
+#12/10/2019 Some KB Aritcles contain several sub-patches or may reference a different KB installer. Added alias detection. Alias will be written to description file.
+
 #OS to download, Variables..
 $OSList = "Server 2012 R2","Server 2008 R2","Server 2016"
 $Year = get-date -format yyyy
@@ -47,30 +49,47 @@ $list.AddRange(@(
 $systemType = $OS.Replace("+","_")
 
 ForEach ( $item in $list ) {
-#Additional Filters here.. Begin downloading filtered items.. Validating files..
+clear-variable alias -erroraction silentlycontinue
+
 if($item.URL -like "*download.windowsupdate.com*" -and $item.Notes -notlike "*Itanium*" -and $item.Notes -notlike "*(1803)*" -and $item.Notes -notlike "*Preview*" -and $item.Notes -notlike "*Adobe Flash*" ){
-$itemURL = $item.URL | out-string
+$itemURL = $item.URL
+if ($itemurl.Count -gt 1){
+$itemURL = $item.URL[0]
+}
 if ($itemURL.trim() -like "*.exe*"){$ext = ".exe"}
 if ($itemURL.trim() -like "*.msu*"){$ext = ".msu"}
-$onlinefilesize = (Invoke-WebRequest -uri $itemURL.trim() -Method Head).Headers.'Content-Length'
+$itemSplit = $itemURL.Split("-")
+$truekb = $itemSplit[1]
+
+if ($truekb -notlike $item.Patch -and $truekb -like "*kb*"){
+$itemkb = $truekb
+$alias = "true"
+} else {$itemkb = $item.Patch}
+
+
+$onlinefilesize = (Invoke-WebRequest -uri $itemURL -Method Head).Headers.'Content-Length'
 $onlinefilesizeMB = [math]::round($onlinefilesize / 1024000 )
-$descfilepath = ("$patchRepo\" + $item.Patch + "-" + $systemType + $ext + ".txt")
+$descfilepath = ("D:\Installers\Downloads\Description\" + $itemkb + "-" + $systemType + $ext + ".txt")
+if($alias -like "true"){
+$item.Notes + ", Alias KB: " + $item.Patch + ", " + $onlinefilesizeMB + "MB" | out-file $descfilepath -ErrorAction SilentlyContinue
+} else {
 $item.Notes + " " + $onlinefilesizeMB + "MB" | out-file $descfilepath -ErrorAction SilentlyContinue
+}
 
-#Begin Download
-Invoke-WebRequest -Uri $itemURL.trim() -OutFile ("$patchRepo\" + $item.Patch + "-" + $systemType + $ext) -TimeoutSec 600 -ErrorAction SilentlyContinue
-$offlinefilesize = Get-ChildItem ("$patchRepo\" + $item.Patch + "-" + $systemType + $ext) | % {[math]::ceiling($_.length)}
-$Validate = (Get-AppLockerFileInformation -path ("$patchRepo\" + $item.Patch + "-" + $systemType + $ext)).Publisher.PublisherName
+Invoke-WebRequest -Uri $itemURL -OutFile ("$patchRepo\" + $itemkb + "-" + $systemType + $ext) -TimeoutSec 600 -ErrorAction SilentlyContinue
+$offlinefilesize = Get-ChildItem ("$patchRepo\" + $itemkb + "-" + $systemType + $ext) | % {[math]::ceiling($_.length)}
+$Validate = (Get-AppLockerFileInformation -path ("$patchRepo\" + $itemkb + "-" + $systemType + $ext)).Publisher.PublisherName
 
-#Validate file
 while ($onlinefilesize -notlike $offlinefilesize -or $validate -notlike "*Microsoft*"){
-Invoke-WebRequest -Uri $itemURL.trim() -OutFile ("$patchRepo\" + $item.Patch + "-" + $systemType + $ext) -TimeoutSec 600 -ErrorAction SilentlyContinue
-$Validate = (Get-AppLockerFileInformation -path ("$patchRepo\" + $item.Patch + "-" + $systemType + $ext)).Publisher.PublisherName
-$offlinefilesize = Get-ChildItem ("$patchRepo\" + $item.Patch + "-" + $systemType + $ext) | % {[math]::ceiling($_.length)}
+Invoke-WebRequest -Uri $itemURL -OutFile ("$patchRepo\" + $itemkb + "-" + $systemType + $ext) -TimeoutSec 600 -ErrorAction SilentlyContinue
+$Validate = (Get-AppLockerFileInformation -path ("$patchRepo\" + $itemkb + "-" + $systemType + $ext)).Publisher.PublisherName
+$offlinefilesize = Get-ChildItem ("$patchRepo\" + $itemkb + "-" + $systemType + $ext) | % {[math]::ceiling($_.length)}
 }
 }
 }
 }
+
+
 
 
 
