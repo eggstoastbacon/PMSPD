@@ -45,7 +45,7 @@ $list.AddRange(@(
 ) -as [psobject[]])
 }
 
-$systemType = $OS.Replace("+","_").Replace("_R2","")
+$systemType = $OS.Replace("+","_")
 
 ForEach ( $item in $list ) {
 if($item.URL -like "*download.windowsupdate.com*" -and $item.Notes -notlike "*Itanium*" -and $item.Notes -notlike "*(1803)*" -and $item.Notes -notlike "*Preview*" -and $item.Notes -notlike "*Adobe Flash*" ){
