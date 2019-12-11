@@ -31,7 +31,6 @@ $CurrentResults = $Pagelinks | where-object{$_.outerText -like "*$currentMonthDa
 $list = [System.Collections.Generic.List[psobject]]::new()
 $i=0
 
-#Create a list of results to parse
 foreach($currentResult in $currentResults){
 $currentResult
 $post = @{ size = 0; updateID = $currentResult.ID.replace('_link',''); uidInfo = $currentResult.ID.replace('_link','')} | ConvertTo-Json -Compress
@@ -46,50 +45,30 @@ $list.AddRange(@(
 ) -as [psobject[]])
 }
 
-$systemType = $OS.Replace("+","_")
+$systemType = $OS.Replace("+","_").Replace("_R2","")
 
 ForEach ( $item in $list ) {
-clear-variable alias -erroraction silentlycontinue
-
 if($item.URL -like "*download.windowsupdate.com*" -and $item.Notes -notlike "*Itanium*" -and $item.Notes -notlike "*(1803)*" -and $item.Notes -notlike "*Preview*" -and $item.Notes -notlike "*Adobe Flash*" ){
-$itemURL = $item.URL
-if ($itemurl.Count -gt 1){
-$itemURL = $item.URL[0]
-}
+$itemURL = $item.URL | out-string
 if ($itemURL.trim() -like "*.exe*"){$ext = ".exe"}
 if ($itemURL.trim() -like "*.msu*"){$ext = ".msu"}
-$itemSplit = $itemURL.Split("-")
-$truekb = $itemSplit[1]
-
-if ($truekb -notlike $item.Patch -and $truekb -like "*kb*"){
-$itemkb = $truekb
-$alias = "true"
-} else {$itemkb = $item.Patch}
-
-
-$onlinefilesize = (Invoke-WebRequest -uri $itemURL -Method Head).Headers.'Content-Length'
+$onlinefilesize = (Invoke-WebRequest -uri $itemURL.trim() -Method Head).Headers.'Content-Length'
 $onlinefilesizeMB = [math]::round($onlinefilesize / 1024000 )
-$descfilepath = ("D:\Installers\Downloads\Description\" + $itemkb + "-" + $systemType + $ext + ".txt")
-if($alias -like "true"){
-$item.Notes + ", Alias KB: " + $item.Patch + ", " + $onlinefilesizeMB + "MB" | out-file $descfilepath -ErrorAction SilentlyContinue
-} else {
+$descfilepath = ("D:\Installers\Downloads\Description\" + $item.Patch + "-" + $systemType + $ext + ".txt")
 $item.Notes + " " + $onlinefilesizeMB + "MB" | out-file $descfilepath -ErrorAction SilentlyContinue
-}
 
-Invoke-WebRequest -Uri $itemURL -OutFile ("$patchRepo\" + $itemkb + "-" + $systemType + $ext) -TimeoutSec 600 -ErrorAction SilentlyContinue
-$offlinefilesize = Get-ChildItem ("$patchRepo\" + $itemkb + "-" + $systemType + $ext) | % {[math]::ceiling($_.length)}
-$Validate = (Get-AppLockerFileInformation -path ("$patchRepo\" + $itemkb + "-" + $systemType + $ext)).Publisher.PublisherName
+Invoke-WebRequest -Uri $itemURL.trim() -OutFile ("$patchRepo\" + $item.Patch + "-" + $systemType + $ext) -TimeoutSec 600 -ErrorAction SilentlyContinue
+$offlinefilesize = Get-ChildItem ("$patchRepo\" + $item.Patch + "-" + $systemType + $ext) | % {[math]::ceiling($_.length)}
+$Validate = (Get-AppLockerFileInformation -path ("$patchRepo\" + $item.Patch + "-" + $systemType + $ext)).Publisher.PublisherName
 
 while ($onlinefilesize -notlike $offlinefilesize -or $validate -notlike "*Microsoft*"){
-Invoke-WebRequest -Uri $itemURL -OutFile ("$patchRepo\" + $itemkb + "-" + $systemType + $ext) -TimeoutSec 600 -ErrorAction SilentlyContinue
-$Validate = (Get-AppLockerFileInformation -path ("$patchRepo\" + $itemkb + "-" + $systemType + $ext)).Publisher.PublisherName
-$offlinefilesize = Get-ChildItem ("$patchRepo\" + $itemkb + "-" + $systemType + $ext) | % {[math]::ceiling($_.length)}
+Invoke-WebRequest -Uri $itemURL.trim() -OutFile ("$patchRepo\" + $item.Patch + "-" + $systemType + $ext) -TimeoutSec 600 -ErrorAction SilentlyContinue
+$Validate = (Get-AppLockerFileInformation -path ("$patchRepo\" + $item.Patch + "-" + $systemType + $ext)).Publisher.PublisherName
+$offlinefilesize = Get-ChildItem ("$patchRepo\" + $item.Patch + "-" + $systemType + $ext) | % {[math]::ceiling($_.length)}
 }
 }
 }
 }
-
-
 
 
 
