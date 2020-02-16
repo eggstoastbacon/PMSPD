@@ -1,3 +1,4 @@
+#EGGSTOASTBACON :: https://github.com/eggstoastbacon
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 #Downloads the currents month's security updates and servicing stack updates. 
 #Includes, IE 11, .NET, Servicing Stack, Security Only and Monthly Rollup.
